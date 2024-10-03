@@ -3,7 +3,6 @@ import useLocalStorageState from "use-local-storage-state";
 import styled from "styled-components";
 import {
   Typography,
-  TextField,
   Button,
   List,
   ListItem,
@@ -16,9 +15,7 @@ import {
   DialogActions,
   Slider,
 } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import RestaurantIcon from "@mui/icons-material/Restaurant";
 
 interface Ingredient {
   name: string;
@@ -42,18 +39,6 @@ const AppContainer = styled.div`
   background: linear-gradient(45deg, #ff9a9e, #fad0c4, #ffecd2);
   border-radius: 20px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-`;
-
-const StyledButton = styled(Button)`
-  && {
-    margin-top: 1rem;
-    background: linear-gradient(45deg, #ff9a9e, #fad0c4);
-    color: #fff;
-    font-weight: bold;
-    &:hover {
-      background: linear-gradient(45deg, #fad0c4, #ff9a9e);
-    }
-  }
 `;
 
 const StyledListItem = styled(ListItem)`
@@ -182,7 +167,7 @@ function App() {
 
   return (
     <AppContainer>
-      <StyledTypography variant="h3" component="h1" gutterBottom>
+      <StyledTypography variant="h3" gutterBottom>
         Funky Recipe Book
       </StyledTypography>
       <List>
