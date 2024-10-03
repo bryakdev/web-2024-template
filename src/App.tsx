@@ -10,164 +10,233 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   IconButton,
-  Checkbox,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Slider,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import RestaurantIcon from "@mui/icons-material/Restaurant";
 
-interface Todo {
+interface Ingredient {
+  name: string;
+  amount: number;
+  unit: string;
+}
+
+interface Recipe {
   id: number;
-  text: string;
-  done: boolean;
+  name: string;
+  ingredients: Ingredient[];
+  instructions: string;
+  servings: number;
 }
 
 const AppContainer = styled.div`
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  background: linear-gradient(45deg, #ff9a9e, #fad0c4, #ffecd2);
+  border-radius: 20px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 `;
 
 const StyledButton = styled(Button)`
   && {
     margin-top: 1rem;
+    background: linear-gradient(45deg, #ff9a9e, #fad0c4);
+    color: #fff;
+    font-weight: bold;
+    &:hover {
+      background: linear-gradient(45deg, #fad0c4, #ff9a9e);
+    }
   }
 `;
 
-const StyledListItemText = styled(ListItemText)<{ done: boolean }>`
+const StyledListItem = styled(ListItem)`
   && {
-    text-decoration: ${(props) => (props.done ? "line-through" : "none")};
+    background-color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 1rem;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    &:hover {
+      transform: scale(1.02);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+  }
+`;
+
+const StyledTypography = styled(Typography)`
+  && {
+    font-family: 'Pacifico', cursive;
+    color: #ff6b6b;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
   }
 `;
 
 function App() {
-  const [todos, setTodos] = useLocalStorageState<Todo[]>("todos", {
+  const [recipes, setRecipes] = useLocalStorageState<Recipe[]>("recipes", {
     defaultValue: [],
   });
-  const [newTodo, setNewTodo] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editText, setEditText] = useState(""); // Add this line
+  const [openDialog, setOpenDialog] = useState(false);
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
+  const [newServings, setNewServings] = useState(1);
 
   useEffect(() => {
-    if (todos.length === 0) {
-      const boilerplateTodos = [
-        { id: 1, text: "Install Node.js", done: false },
-        { id: 2, text: "Install Cursor IDE", done: false },
-        { id: 3, text: "Log into Github", done: false },
-        { id: 4, text: "Fork a repo", done: false },
-        { id: 5, text: "Make changes", done: false },
-        { id: 6, text: "Commit", done: false },
-        { id: 7, text: "Deploy", done: false },
+    if (recipes.length === 0) {
+      const boilerplateRecipes: Recipe[] = [
+        {
+          id: 1,
+          name: "Spaghetti Carbonara",
+          ingredients: [
+            { name: "Spaghetti", amount: 400, unit: "g" },
+            { name: "Pancetta", amount: 150, unit: "g" },
+            { name: "Eggs", amount: 4, unit: "" },
+            { name: "Parmesan cheese", amount: 100, unit: "g" },
+          ],
+          instructions: "1. Cook pasta. 2. Fry pancetta. 3. Mix eggs and cheese. 4. Combine all ingredients.",
+          servings: 4,
+        },
+        {
+          id: 2,
+          name: "Chicken Stir Fry",
+          ingredients: [
+            { name: "Chicken breast", amount: 500, unit: "g" },
+            { name: "Mixed vegetables", amount: 400, unit: "g" },
+            { name: "Soy sauce", amount: 3, unit: "tbsp" },
+          ],
+          instructions: "1. Cut chicken. 2. Stir fry vegetables. 3. Add chicken and soy sauce. 4. Cook until done.",
+          servings: 3,
+        },
+        {
+          id: 3,
+          name: "Greek Salad",
+          ingredients: [
+            { name: "Cucumber", amount: 1, unit: "" },
+            { name: "Tomatoes", amount: 4, unit: "" },
+            { name: "Red onion", amount: 1, unit: "" },
+            { name: "Feta cheese", amount: 200, unit: "g" },
+            { name: "Olive oil", amount: 3, unit: "tbsp" },
+          ],
+          instructions: "1. Chop vegetables. 2. Crumble feta. 3. Mix all ingredients. 4. Drizzle with olive oil.",
+          servings: 4,
+        },
+        {
+          id: 4,
+          name: "Banana Smoothie",
+          ingredients: [
+            { name: "Bananas", amount: 2, unit: "" },
+            { name: "Milk", amount: 250, unit: "ml" },
+            { name: "Honey", amount: 1, unit: "tbsp" },
+          ],
+          instructions: "1. Peel bananas. 2. Blend all ingredients until smooth.",
+          servings: 2,
+        },
+        {
+          id: 5,
+          name: "Guacamole",
+          ingredients: [
+            { name: "Avocados", amount: 3, unit: "" },
+            { name: "Lime juice", amount: 2, unit: "tbsp" },
+            { name: "Red onion", amount: 0.5, unit: "" },
+            { name: "Cilantro", amount: 2, unit: "tbsp" },
+          ],
+          instructions: "1. Mash avocados. 2. Chop onion and cilantro. 3. Mix all ingredients. 4. Season to taste.",
+          servings: 4,
+        },
       ];
-      setTodos(boilerplateTodos);
+      setRecipes(boilerplateRecipes);
     }
-  }, [todos, setTodos]);
+  }, [recipes, setRecipes]);
 
-  const handleAddTodo = () => {
-    if (newTodo.trim() !== "") {
-      setTodos([
-        ...todos,
-        { id: Date.now(), text: newTodo.trim(), done: false },
-      ]);
-      setNewTodo("");
-    }
+  const handleOpenDialog = (recipe: Recipe) => {
+    setEditingRecipe(recipe);
+    setNewServings(recipe.servings);
+    setOpenDialog(true);
   };
 
-  const handleDeleteTodo = (id: number) => {
-    setTodos(todos.filter((todo) => todo.id !== id));
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setEditingRecipe(null);
+    setNewServings(1);
   };
 
-  const handleToggleTodo = (id: number) => {
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, done: !todo.done } : todo
-      )
-    );
-  };
-
-  const handleEditTodo = (id: number) => {
-    setEditingId(id);
-    const todoToEdit = todos.find((todo) => todo.id === id);
-    if (todoToEdit) {
-      setEditText(todoToEdit.text);
+  const handleUpdateServings = () => {
+    if (editingRecipe) {
+      const scaleFactor = newServings / editingRecipe.servings;
+      const updatedRecipe: Recipe = {
+        ...editingRecipe,
+        servings: newServings,
+        ingredients: editingRecipe.ingredients.map((ingredient) => ({
+          ...ingredient,
+          amount: Number((ingredient.amount * scaleFactor).toFixed(2)),
+        })),
+      };
+      setRecipes(recipes.map((r) => (r.id === updatedRecipe.id ? updatedRecipe : r)));
+      handleCloseDialog();
     }
-  };
-
-  const handleUpdateTodo = (id: number) => {
-    if (editText.trim() !== "") {
-      setTodos(
-        todos.map((todo) =>
-          todo.id === id ? { ...todo, text: editText.trim() } : todo
-        )
-      );
-    }
-    setEditingId(null);
-    setEditText("");
   };
 
   return (
     <AppContainer>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Todo List
-      </Typography>
-      <TextField
-        fullWidth
-        variant="outlined"
-        label="New Todo"
-        value={newTodo}
-        onChange={(e) => setNewTodo(e.target.value)}
-        onKeyPress={(e) => e.key === "Enter" && handleAddTodo()}
-        autoFocus // Add this line to enable autofocus
-      />
-      <StyledButton
-        variant="contained"
-        color="primary"
-        fullWidth
-        onClick={handleAddTodo}
-      >
-        Add Todo
-      </StyledButton>
+      <StyledTypography variant="h3" component="h1" gutterBottom>
+        Funky Recipe Book
+      </StyledTypography>
       <List>
-        {todos.map((todo) => (
-          <ListItem key={todo.id} dense>
-            <Checkbox
-              edge="start"
-              checked={todo.done}
-              onChange={() => handleToggleTodo(todo.id)}
+        {recipes.map((recipe) => (
+          <StyledListItem key={recipe.id}>
+            <ListItemText
+              primary={<Typography variant="h6">{recipe.name}</Typography>}
+              secondary={`Servings: ${recipe.servings}`}
             />
-            {editingId === todo.id ? (
-              <TextField
-                fullWidth
-                value={editText}
-                onChange={(e) => setEditText(e.target.value)}
-                onBlur={() => handleUpdateTodo(todo.id)}
-                onKeyPress={(e) =>
-                  e.key === "Enter" && handleUpdateTodo(todo.id)
-                }
-                autoFocus
-              />
-            ) : (
-              <StyledListItemText primary={todo.text} done={todo.done} />
-            )}
             <ListItemSecondaryAction>
               <IconButton
                 edge="end"
                 aria-label="edit"
-                onClick={() => handleEditTodo(todo.id)}
+                onClick={() => handleOpenDialog(recipe)}
               >
                 <EditIcon />
               </IconButton>
-              <IconButton
-                edge="end"
-                aria-label="delete"
-                onClick={() => handleDeleteTodo(todo.id)}
-              >
-                <DeleteIcon />
-              </IconButton>
             </ListItemSecondaryAction>
-          </ListItem>
+          </StyledListItem>
         ))}
       </List>
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>{editingRecipe?.name}</DialogTitle>
+        <DialogContent>
+          <Typography gutterBottom>Adjust servings:</Typography>
+          <Slider
+            value={newServings}
+            onChange={(_, value) => setNewServings(value as number)}
+            min={1}
+            max={20}
+            step={1}
+            marks
+            valueLabelDisplay="auto"
+          />
+          <Typography variant="h6" gutterBottom>Ingredients:</Typography>
+          <List>
+            {editingRecipe?.ingredients.map((ingredient, index) => (
+              <ListItem key={index}>
+                <ListItemText
+                  primary={`${ingredient.name}: ${ingredient.amount} ${ingredient.unit}`}
+                />
+              </ListItem>
+            ))}
+          </List>
+          <Typography variant="h6" gutterBottom>Instructions:</Typography>
+          <Typography>{editingRecipe?.instructions}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleUpdateServings} color="primary">
+            Update Servings
+          </Button>
+        </DialogActions>
+      </Dialog>
     </AppContainer>
   );
 }
