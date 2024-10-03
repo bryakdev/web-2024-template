@@ -28,3 +28,4 @@ dist-ssr
 
 # Do not ignore .gitconfig
 !.gitconfig
+.env
